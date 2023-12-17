@@ -1,1 +1,1 @@
-# Introduction
+Please review [this](./reports/proposal.md) file for the complete proposal.
