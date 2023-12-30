@@ -1,0 +1,10 @@
+{
+  "queries": "Teacher\nhttps://www.google.com/search?q=doctor&ibp=htl;jobs",
+  "maxPagesPerQuery": 1,
+  "csvFriendlyOutput": false,
+  "languageCode": "",
+  "maxConcurrency": 10,
+  "saveHtml": false,
+  "saveHtmlToKeyValueStore": false,
+  "includeUnfilteredResults": false
+}
