@@ -13,7 +13,7 @@ on:
 jobs:
   job-scraping-test:
     runs-on: ubuntu-latest
-    environment: aws
+    environment: jobs-scraper
     steps:
         - uses: actions/checkout@v4
         - uses: actions/setup-python@v5
@@ -28,3 +28,11 @@ jobs:
             opensearch_user : ${{ secrets.OPENSEARCH_USER }}
             opensearch_pwd : ${{ secrets.OPENSEARCH_PASSWORD }}
             brave_apify_token : ${{ secrets.APIFY_TOKEN }}
+
+  aws-deploy:
+    needs: job-scraping-test
+    runs-on: ubuntu-latest
+    environment: aws
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "hello world"
