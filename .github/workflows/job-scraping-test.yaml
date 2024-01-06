@@ -10,10 +10,10 @@ on:
   workflow_dispatch:
 
 jobs:
-  hello:
+  response-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: hello world
+      - name: authenticate
         run: echo "Hello world"
         shell: bash
