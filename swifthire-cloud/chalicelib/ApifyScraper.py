@@ -1,7 +1,11 @@
 from apify_client import ApifyClient
+import json
 
 # APIFY INPUT
-ACTOR_ID = "SpK8RxKhIgV6BWOz9"
+# with open('./app_config.json', 'r') as f:
+#     config = json.load(f)
+#
+# ACTOR_ID = config["APIFY"]["ACTOR"]["ID"]
 
 
 class ApiFyActor:
@@ -16,10 +20,10 @@ class ApiFyActor:
 
     """
 
-    def __init__(self, api_token, actor_id=ACTOR_ID):
+    def __init__(self, api_token, config):
         self.api_token = api_token
         self.client = ApifyClient(api_token)
-        self.actor_id = actor_id
+        self.actor_id = config["ID"]
 
     def run(self, params):
         """

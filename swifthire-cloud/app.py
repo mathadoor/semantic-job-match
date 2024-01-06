@@ -1,49 +1,37 @@
+"""
+    This file contains the code for the AWS Lambda function that scrapes job
+    postings and adds them to the open search database.
+"""
+
+# Library Imports
 from chalice import Chalice
 from opensearchpy import OpenSearch
 from opensearchpy.client import IndicesClient
-from job_scraper.ApifyScraper import ApiFyActor
+from chalicelib.ApifyScraper import ApiFyActor
 import hashlib
 import boto3
 import logging
-
 import re
 import os
+import json
 
-app = Chalice(app_name='swifthire-cloud')
+# Global Variables
 
-_TITLES = [
-    "Machine Learning Engineer",
-    # "Data Scientist",
-    # "MLOps Engineer",
-    # "Data Analyst",
-    # "Data Engineer"
-]
+# load config
+file_path = os.path.join(os.path.dirname(__file__), "app_config.json")
+with open(file_path, 'r') as f:
+    config = json.load(f)
 
-_JOBS_BUCKET_NAME = "swifthire-media-bucket-0"
+# RESOURCE VARIABLES
 _JOBS_BUCKET = None
 _SCRAPER = None
 _OS_CLIENT = None
 
-_NUM_PAGES = 1
-_MAX_CONCURRENCY = 10
+# Run the app
+app = Chalice(app_name=config["INFRA"]["CHALICE"]["APP_NAME"])
 
-BASE_QUERIES = {
-    "maxPagesPerQuery": _NUM_PAGES,
-    "csvFriendlyOutput": False,
-    "countryCode": "ca",
-    "languageCode": "",
-    "maxConcurrency": _MAX_CONCURRENCY,
-    "saveHtml": False,
-    "saveHtmlToKeyValueStore": False,
-    "includeUnfilteredResults": False,
-}
 
-_QUERY_URL = "https://www.google.ca/search?q=JOB&ibp=htl;jobs&uule=w+CAIQICIGQ2FuYWRh"
-
-# ELASTIC INPUT
-OPENSEARCH_HOST = 'search-swift-hire-dev-jfmldmym4cfbiwdhwmtuqq6ihy.us-west-2.es.amazonaws.com'
-INDEX_NAME = 'jobs_harpreet_matharoo'
-
+# Helper Functions
 
 def gen_queries():
     """
@@ -56,13 +44,14 @@ def gen_queries():
         queries: A list of queries for each searched title in Titles
     """
     # PROCESS QUERIES TO CREATE A QUERY FOR EACH SEARCHED TITLE
-    processed_titles = ["%20".join(title.split()) for title in _TITLES]
-    query_urls = [re.sub("JOB", title, _QUERY_URL) for title in processed_titles]
+    search_config = config["APIFY"]["SEARCH"]
+    processed_titles = ["%20".join(title.split()) for title in search_config["TITLES"]]
+    query_urls = [re.sub("JOB", title, search_config["QUERY_URL"]) for title in processed_titles]
 
     # PREPARE QUERIES
     queries = []
     for query_url in query_urls:
-        query = BASE_QUERIES.copy()
+        query = search_config["BASE_QUERIES"].copy()
         query["queries"] = query_url
         queries.append(query)
 
@@ -75,9 +64,10 @@ def get_bucket():
     s3 = boto3.resource("s3")
 
     # Check if the bucket already exists
-    _JOBS_BUCKET = s3.Bucket(_JOBS_BUCKET_NAME)
+    jobs_bucket_name = config["INFRA"]["AWS"]["S3"]["JOBS_BUCKET"]
+    _JOBS_BUCKET = s3.Bucket(jobs_bucket_name)
     if _JOBS_BUCKET.creation_date is None:
-        _JOBS_BUCKET = s3.create_bucket(Bucket=_JOBS_BUCKET_NAME)
+        _JOBS_BUCKET = s3.create_bucket(Bucket=jobs_bucket_name)
 
     return _JOBS_BUCKET
 
@@ -89,9 +79,10 @@ def get_opensearch_client():
     if _OS_CLIENT is None:
         auth = (os.environ['opensearch_user'],
                 os.environ['opensearch_pwd'])
+        opensearch_config = config["OPENSEARCH"]
 
         _OS_CLIENT = OpenSearch(
-            hosts=[{'host': OPENSEARCH_HOST, 'port': 443}],
+            hosts=[{'host': opensearch_config["HOST"], 'port': 443}],
             http_compress=True,  # enables gzip compression for request bodies
             http_auth=auth,
             use_ssl=True,
@@ -100,8 +91,9 @@ def get_opensearch_client():
         )
 
         # CREATE INDEX IF IT DOES NOT EXIST
-        if not IndicesClient(_OS_CLIENT).exists(index=INDEX_NAME):
-            _OS_CLIENT.indices.create(index=INDEX_NAME)
+        index_name = opensearch_config["INDEX"]
+        if not IndicesClient(_OS_CLIENT).exists(index=index_name):
+            _OS_CLIENT.indices.create(index=index_name)
 
     return _OS_CLIENT
 
@@ -111,7 +103,7 @@ def get_scraper():
 
     global _SCRAPER
     if _SCRAPER is None:
-        _SCRAPER = ApiFyActor(os.environ["brave_apify_token"])
+        _SCRAPER = ApiFyActor(os.environ["brave_apify_token"], config["APIFY"]["ACTOR"])
 
     return _SCRAPER
 
@@ -158,11 +150,12 @@ def add_job(posting):
 
     # CHECK IF THE JOB POSTING ALREADY EXISTS
     client = get_opensearch_client()
-    if client.exists(index=INDEX_NAME, id=uuid):
+    index_name = config["OPENSEARCH"]["INDEX"]
+    if client.exists(index=index_name, id=uuid):
         return
 
     # ADD THE JOB POSTING TO THE DATABASE
-    client.index(index=INDEX_NAME, id=uuid, body=posting)
+    client.index(index=index_name, id=uuid, body=posting)
 
 
 # @app.route('/')
@@ -172,8 +165,8 @@ def add_job(posting):
 #         responses.append(get_scraper().run(query))
 #
 #     return responses
-
-@app.schedule('rate(4 hour)')
+# Lambda Functions
+@app.schedule('rate(24 hour)')
 def scheduled_job_scrape():
     """ Function to scrape job postings and add them to the database"""
 
