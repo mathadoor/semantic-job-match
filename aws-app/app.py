@@ -4,7 +4,7 @@
 """
 
 # Library Imports
-from chalice import Chalice
+from chalice import Chalice, Cron
 from opensearchpy import OpenSearch
 from opensearchpy.client import IndicesClient
 from chalicelib.ApifyScraper import ApiFyActor
@@ -166,18 +166,29 @@ def add_job(posting):
 #
 #     return responses
 # Lambda Functions
-@app.schedule('rate(24 hour)')
+@app.schedule(Cron(0, 0, '?', '*', 'MON-FRI', '*').to_string())
 def scheduled_job_scrape():
     """ Function to scrape job postings and add them to the database"""
 
     # SCRAPE JOB POSTINGS
+    for posting in scrape_jobs():
+        add_job(posting)
+
+
+@app.route('/scrape_jobs')
+def scrape_jobs():
+    """ Base Function to scrape jobs and return a list of scraped postings"""
+
+    # SCRAPE JOB POSTINGS
     responses = scrape_postings()
+    postings = []
 
     # ADD JOB POSTINGS TO DATABASE
     for response in responses:
         for posting in response['googleJobs']:
-            add_job(posting)
+            postings.append(posting)
 
+    return postings
 
 # The view function above will return {"hello": "world"}
 # whenever you make an HTTP GET request to '/'.
