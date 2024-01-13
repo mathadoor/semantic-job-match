@@ -4,11 +4,12 @@
 """
 
 # Library Imports
-from chalice import Chalice, Cron
+from chalice import Chalice, Cron, IAMAuthorizer, AuthResponse
 from opensearchpy import OpenSearch
 from opensearchpy.client import IndicesClient
 from chalicelib.ApifyScraper import ApiFyActor
 import hashlib
+from dotenv import load_dotenv
 import boto3
 import logging
 import re
@@ -27,8 +28,13 @@ _JOBS_BUCKET = None
 _SCRAPER = None
 _OS_CLIENT = None
 
+# LOAD SECRETS
+load_dotenv()
+
 # Run the app
 app = Chalice(app_name=config["INFRA"]["CHALICE"]["APP_NAME"])
+
+authorizer = IAMAuthorizer()
 
 
 # Helper Functions
@@ -175,7 +181,7 @@ def scheduled_job_scrape():
         add_job(posting)
 
 
-@app.route('/scrape_jobs')
+@app.route('/scrape_jobs', authorizer=authorizer)
 def scrape_jobs():
     """ Base Function to scrape jobs and return a list of scraped postings"""
 

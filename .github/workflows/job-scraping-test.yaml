@@ -3,7 +3,6 @@ name: job-scraping-test
 on:
   push:
     branches:
-      - main
       - development
   pull_request:
     branches:
@@ -35,4 +34,9 @@ jobs:
     environment: aws
     steps:
       - uses: actions/checkout@v4
-      - run: echo "hello world"
+      - uses: aws-actions/configure-aws-credentials@v4.0.1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      - run: cd aws-app && chmod +x packaged/cloudformation_deploy.sh && ./packaged/cloudformation_deploy.sh
