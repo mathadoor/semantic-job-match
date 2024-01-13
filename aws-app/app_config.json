@@ -1,0 +1,42 @@
+{
+  "OPENSEARCH" : {
+    "HOST" : "search-swift-hire-dev-jfmldmym4cfbiwdhwmtuqq6ihy.us-west-2.es.amazonaws.com",
+    "PORT" : "443",
+    "INDEX" : "jobs_harpreet_matharoo"
+  },
+  "APIFY" : {
+    "SEARCH" : {
+      "TITLES" : [
+        "Machine Learning Engineer",
+        "Data Scientist",
+        "MLOps Engineer",
+        "Data Analyst",
+        "Data Engineer"
+      ],
+      "BASE_QUERIES" : {
+          "maxPagesPerQuery": 1,
+          "csvFriendlyOutput": false,
+          "countryCode": "ca",
+          "languageCode": "",
+          "maxConcurrency": 10,
+          "saveHtml": false,
+          "saveHtmlToKeyValueStore": false,
+          "includeUnfilteredResults": false
+      },
+      "QUERY_URL" : "https://www.google.ca/search?q=JOB&ibp=htl;jobs&uule=w+CAIQICIGQ2FuYWRh"
+    },
+    "ACTOR" : {
+      "ID" : "SpK8RxKhIgV6BWOz9"
+    }
+  },
+  "INFRA" : {
+    "CHALICE" : {
+      "APP_NAME" : "swift-hire-dev"
+    },
+    "AWS" : {
+      "S3" : {
+        "JOBS_BUCKET" : "swifthire-media-bucket-0"
+      }
+    }
+  }
+}

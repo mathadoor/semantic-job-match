@@ -1,0 +1,38 @@
+name: job-scraping-test
+
+on:
+  push:
+    branches:
+      - main
+      - development
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  job-scraping-test:
+    runs-on: ubuntu-latest
+    environment: jobs-scraper
+    steps:
+        - uses: actions/checkout@v4
+        - uses: actions/setup-python@v5
+          with:
+            python-version: 'pypy3.9'
+            cache: 'pip'
+        - run: pip install -r requirements.txt
+
+        - name: run-scraping-test
+          run: python -m pytest
+          env:
+            opensearch_user : ${{ secrets.OPENSEARCH_USER }}
+            opensearch_pwd : ${{ secrets.OPENSEARCH_PASSWORD }}
+            brave_apify_token : ${{ secrets.APIFY_TOKEN }}
+
+  aws-deploy:
+    needs: job-scraping-test
+    runs-on: ubuntu-latest
+    environment: aws
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "hello world"
