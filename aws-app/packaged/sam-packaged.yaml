@@ -29,7 +29,7 @@ Resources:
     Properties:
       Runtime: python3.9
       Handler: app.scrape_jobs
-      CodeUri: s3://semantic-job-search-bucket/8a7e9e9ec9e71ebacf39dedced6d0653
+      CodeUri: s3://semantic-job-search-bucket/ab28fc7e0795a8804b62fb508277666a
       Tags:
         aws-chalice: version=1.30.0:stage=dev:app=semantic-job-match
       Tracing: PassThrough
@@ -44,7 +44,7 @@ Resources:
     Properties:
       Runtime: python3.9
       Handler: app.scheduled_job_scrape
-      CodeUri: s3://semantic-job-search-bucket/8a7e9e9ec9e71ebacf39dedced6d0653
+      CodeUri: s3://semantic-job-search-bucket/ab28fc7e0795a8804b62fb508277666a
       Tags:
         aws-chalice: version=1.30.0:stage=dev:app=semantic-job-match
       Tracing: PassThrough

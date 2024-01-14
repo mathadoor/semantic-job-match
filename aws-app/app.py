@@ -96,8 +96,8 @@ def get_opensearch_client():
     if _OS_CLIENT is None:
         if "opensearch_user" not in os.environ:
             ssm = get_ssm_client()
-            auth = (ssm.get_parameter(Name="opensearch_user", WithDecryption=True)["Parameter"]["Value"],
-                    ssm.get_parameter(Name="opensearch_pwd", WithDecryption=True)["Parameter"]["Value"])
+            auth = (ssm.get_parameter(Name="opensearch_user", WithDecryption=True)["Parameter"]["Value"].strip(),
+                    ssm.get_parameter(Name="opensearch_pwd", WithDecryption=True)["Parameter"]["Value"].strip())
         else:
             auth = (os.environ['opensearch_user'],
                     os.environ['opensearch_pwd'])
@@ -130,7 +130,7 @@ def get_scraper():
             apify_token = ssm.get_parameter(Name="brave_apify_token", WithDecryption=True)["Parameter"]["Value"]
         else:
             apify_token = os.environ["brave_apify_token"]
-        _SCRAPER = ApiFyActor(apify_token, config["APIFY"]["ACTOR"])
+        _SCRAPER = ApiFyActor(apify_token.strip(), config["APIFY"]["ACTOR"])
 
     return _SCRAPER
 

@@ -1,9 +1,9 @@
 name: job-scraping-test
 
 on:
-  push:
-    branches:
-      - development
+#  push:
+#    branches:
+#      - development
   pull_request:
     branches:
       - main
