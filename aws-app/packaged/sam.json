@@ -40,6 +40,26 @@
         ]
       }
     },
+    "ScrapeJobs": {
+      "Type": "AWS::Serverless::Function",
+      "Properties": {
+        "Runtime": "python3.9",
+        "Handler": "app.scrape_jobs",
+        "CodeUri": "./deployment.zip",
+        "Tags": {
+          "aws-chalice": "version=1.30.0:stage=dev:app=semantic-job-match"
+        },
+        "Tracing": "PassThrough",
+        "Timeout": 300,
+        "MemorySize": 128,
+        "Role": {
+          "Fn::GetAtt": [
+            "DefaultRole",
+            "Arn"
+          ]
+        }
+      }
+    },
     "ScheduledJobScrape": {
       "Type": "AWS::Serverless::Function",
       "Properties": {
@@ -47,10 +67,10 @@
         "Handler": "app.scheduled_job_scrape",
         "CodeUri": "./deployment.zip",
         "Tags": {
-          "aws-chalice": "version=1.30.0:stage=dev:app=swifthire-cloud"
+          "aws-chalice": "version=1.30.0:stage=dev:app=semantic-job-match"
         },
         "Tracing": "PassThrough",
-        "Timeout": 60,
+        "Timeout": 300,
         "MemorySize": 128,
         "Role": {
           "Fn::GetAtt": [
@@ -62,7 +82,7 @@
           "ScheduledJobScrapeEvent": {
             "Type": "Schedule",
             "Properties": {
-              "Schedule": "cron(0 0 ? * MON-FRI *)"
+              "Schedule": "cron(0 0 ? * * *)"
             }
           }
         }

@@ -24,16 +24,31 @@ Resources:
             - logs:PutLogEvents
             Resource: arn:*:logs:*:*:*
         PolicyName: DefaultRolePolicy
+  ScrapeJobs:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: python3.9
+      Handler: app.scrape_jobs
+      CodeUri: s3://semantic-job-search-bucket/8a7e9e9ec9e71ebacf39dedced6d0653
+      Tags:
+        aws-chalice: version=1.30.0:stage=dev:app=semantic-job-match
+      Tracing: PassThrough
+      Timeout: 300
+      MemorySize: 128
+      Role:
+        Fn::GetAtt:
+        - DefaultRole
+        - Arn
   ScheduledJobScrape:
     Type: AWS::Serverless::Function
     Properties:
       Runtime: python3.9
       Handler: app.scheduled_job_scrape
-      CodeUri: s3://semantic-job-search-bucket/794eb21a5564212e3a39fbecd1a71cf9
+      CodeUri: s3://semantic-job-search-bucket/8a7e9e9ec9e71ebacf39dedced6d0653
       Tags:
-        aws-chalice: version=1.30.0:stage=dev:app=swifthire-cloud
+        aws-chalice: version=1.30.0:stage=dev:app=semantic-job-match
       Tracing: PassThrough
-      Timeout: 60
+      Timeout: 300
       MemorySize: 128
       Role:
         Fn::GetAtt:
@@ -43,4 +58,4 @@ Resources:
         ScheduledJobScrapeEvent:
           Type: Schedule
           Properties:
-            Schedule: cron(0 0 ? * MON-FRI *)
+            Schedule: cron(0 0 ? * * *)
