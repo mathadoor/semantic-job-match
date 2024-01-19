@@ -15,18 +15,33 @@ st.markdown('''## Personal Information''')
 name = st.text_input('Name')
 
 
+def validate_email(string):
+    # Regular expression to validate email
+    query = r"\b[A-Za-z0-9\._%\+\-]+@[A-Za-z0-9\.\-]+\.[A-Za-z]{2,}\b"
+
+    if re.fullmatch(query, string):
+        return True
+
+    return False
 
 
 email = st.text_input('Email')
+
 frequency = st.selectbox('Email Frequency', ['Daily', 'Weekly', 'Monthly'])
 
-st.markdown('''## Please Enter Your Preferred Job Title''')
-st.selectbox('Job Title', ['Data Scientist', 'Data Analyst', 'Software Engineer', 'Machine Learning Engineer'])
+st.selectbox('Preferred Job Title',
+             ['Data Scientist', 'Data Analyst', 'Software Engineer', 'Machine Learning Engineer'])
 
 st.markdown('''## Please Upload Your Resume''')
 resume = st.file_uploader('Resume', type=['pdf'])
 
 # Button to submit information
 if st.button('Submit'):
-    st.write(f'Thank you for submitting your information. We will send you job postings '
-             f'that match your resume on {frequency.text} basis.')
+    # If any of the entries are not valid, display error message in red
+    if (name == ""
+            or not validate_email(name)
+            or resume is None):
+        st.markdown('<p style="color: red;">Please Enter Valid Information</p>', unsafe_allow_html=True)
+    else:
+        st.write(f'Thank you for submitting your information. We will send you job postings '
+                 f'that match your resume on {frequency.text} basis.')
