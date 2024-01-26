@@ -193,8 +193,8 @@ def add_job(posting):
 #
 #     return responses
 # Lambda Functions
-@app.schedule(Cron(0, 0, '?', '*', '*', '*').to_string())
-def scheduled_job_scrape(event, context):
+@app.schedule(Cron(25, 3, '?', '*', '*', '*').to_string())
+def scheduled_job_scrape(context):
     """ Function to scrape job postings and add them to the database"""
 
     # SCRAPE JOB POSTINGS
@@ -206,8 +206,8 @@ def scheduled_job_scrape(event, context):
 
 
 # @app.route('/scrape_jobs', authorizer=authorizer)
-@app.lambda_function(name="scrape_jobs")
-def scrape_jobs(event, context):
+#@app.lambda_function(name="scrape_jobs")
+def scrape_jobs():
     """ Base Function to scrape jobs and return a list of scraped postings"""
 
     # SCRAPE JOB POSTINGS

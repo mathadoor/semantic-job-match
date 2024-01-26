@@ -5,10 +5,9 @@
     "dev": {
       "lambda_functions": {
         "scheduled_job_scrape": {
-          "lambda_timeout": 300
-        },
-        "scrape_jobs": {
-            "lambda_timeout": 300
+          "lambda_timeout": 300,
+          "autogen_policy": false,
+          "iam_policy_file": "scheduled-job-scrape-lambda-policy.json"
         }
       }
     }
