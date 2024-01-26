@@ -4,11 +4,12 @@
 """
 
 # Library Imports
-from chalice import Chalice, Cron
+from chalice import Chalice, Cron, IAMAuthorizer, AuthResponse
 from opensearchpy import OpenSearch
 from opensearchpy.client import IndicesClient
 from chalicelib.ApifyScraper import ApiFyActor
 import hashlib
+from dotenv import load_dotenv
 import boto3
 import logging
 import re
@@ -18,7 +19,7 @@ import json
 # Global Variables
 
 # load config
-file_path = os.path.join(os.path.dirname(__file__), "app_config.json")
+file_path = os.path.join(os.path.dirname(__file__), "chalicelib/app_config.json")
 with open(file_path, 'r') as f:
     config = json.load(f)
 
@@ -26,12 +27,28 @@ with open(file_path, 'r') as f:
 _JOBS_BUCKET = None
 _SCRAPER = None
 _OS_CLIENT = None
+_SSM = None
+
+# LOAD SECRETS
+load_dotenv()
 
 # Run the app
 app = Chalice(app_name=config["INFRA"]["CHALICE"]["APP_NAME"])
 
+authorizer = IAMAuthorizer()
+
 
 # Helper Functions
+
+def get_ssm_client():
+    """ Helper Function to create an AWS SSM Client"""
+
+    global _SSM
+    if _SSM is None:
+        _SSM = boto3.client("ssm")
+
+    return _SSM
+
 
 def gen_queries():
     """
@@ -77,8 +94,13 @@ def get_opensearch_client():
 
     global _OS_CLIENT
     if _OS_CLIENT is None:
-        auth = (os.environ['opensearch_user'],
-                os.environ['opensearch_pwd'])
+        if "opensearch_user" not in os.environ:
+            ssm = get_ssm_client()
+            auth = (ssm.get_parameter(Name="opensearch_user", WithDecryption=True)["Parameter"]["Value"].strip(),
+                    ssm.get_parameter(Name="opensearch_pwd", WithDecryption=True)["Parameter"]["Value"].strip())
+        else:
+            auth = (os.environ['opensearch_user'],
+                    os.environ['opensearch_pwd'])
         opensearch_config = config["OPENSEARCH"]
 
         _OS_CLIENT = OpenSearch(
@@ -103,7 +125,12 @@ def get_scraper():
 
     global _SCRAPER
     if _SCRAPER is None:
-        _SCRAPER = ApiFyActor(os.environ["brave_apify_token"], config["APIFY"]["ACTOR"])
+        if "brave_apify_token" not in os.environ:
+            ssm = get_ssm_client()
+            apify_token = ssm.get_parameter(Name="brave_apify_token", WithDecryption=True)["Parameter"]["Value"]
+        else:
+            apify_token = os.environ["brave_apify_token"]
+        _SCRAPER = ApiFyActor(apify_token.strip(), config["APIFY"]["ACTOR"])
 
     return _SCRAPER
 
@@ -166,21 +193,27 @@ def add_job(posting):
 #
 #     return responses
 # Lambda Functions
-@app.schedule(Cron(0, 0, '?', '*', 'MON-FRI', '*').to_string())
-def scheduled_job_scrape():
+@app.schedule(Cron(25, 3, '?', '*', '*', '*').to_string())
+def scheduled_job_scrape(context):
     """ Function to scrape job postings and add them to the database"""
 
     # SCRAPE JOB POSTINGS
+    app.log.info("Starting Job Scraping Posting")
     for posting in scrape_jobs():
         add_job(posting)
 
+    app.log.info("Finished posting the jobs to OpenSearch.")
 
-@app.route('/scrape_jobs')
+
+# @app.route('/scrape_jobs', authorizer=authorizer)
+#@app.lambda_function(name="scrape_jobs")
 def scrape_jobs():
     """ Base Function to scrape jobs and return a list of scraped postings"""
 
     # SCRAPE JOB POSTINGS
     responses = scrape_postings()
+    app.log.info("Finished Job Scraping Postings. Posting them to OpenSearch now.")
+
     postings = []
 
     # ADD JOB POSTINGS TO DATABASE

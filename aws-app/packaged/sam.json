@@ -3,7 +3,7 @@
   "Transform": "AWS::Serverless-2016-10-31",
   "Outputs": {},
   "Resources": {
-    "DefaultRole": {
+    "ScheduledJobScrapeRole": {
       "Type": "AWS::IAM::Role",
       "Properties": {
         "AssumeRolePolicyDocument": {
@@ -31,11 +31,25 @@
                     "logs:CreateLogStream",
                     "logs:PutLogEvents"
                   ],
-                  "Resource": "arn:*:logs:*:*:*"
+                  "Resource": "arn:aws:logs:*:*:*"
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ssm:GetParameter"
+                  ],
+                  "Resource": "arn:aws:ssm:*:*:parameter/*"
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "kms:Decrypt"
+                  ],
+                  "Resource": "arn:aws:kms:*:*:key/*"
                 }
               ]
             },
-            "PolicyName": "DefaultRolePolicy"
+            "PolicyName": "ScheduledJobScrapeRolePolicy"
           }
         ]
       }
@@ -47,14 +61,14 @@
         "Handler": "app.scheduled_job_scrape",
         "CodeUri": "./deployment.zip",
         "Tags": {
-          "aws-chalice": "version=1.30.0:stage=dev:app=swifthire-cloud"
+          "aws-chalice": "version=1.30.0:stage=dev:app=semantic-job-match"
         },
         "Tracing": "PassThrough",
-        "Timeout": 60,
+        "Timeout": 300,
         "MemorySize": 128,
         "Role": {
           "Fn::GetAtt": [
-            "DefaultRole",
+            "ScheduledJobScrapeRole",
             "Arn"
           ]
         },
@@ -62,7 +76,7 @@
           "ScheduledJobScrapeEvent": {
             "Type": "Schedule",
             "Properties": {
-              "Schedule": "cron(0 0 ? * MON-FRI *)"
+              "Schedule": "cron(25 3 ? * * *)"
             }
           }
         }

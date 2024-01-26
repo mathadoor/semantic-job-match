@@ -2,7 +2,7 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Outputs: {}
 Resources:
-  DefaultRole:
+  ScheduledJobScrapeRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -22,25 +22,33 @@ Resources:
             - logs:CreateLogGroup
             - logs:CreateLogStream
             - logs:PutLogEvents
-            Resource: arn:*:logs:*:*:*
-        PolicyName: DefaultRolePolicy
+            Resource: arn:aws:logs:*:*:*
+          - Effect: Allow
+            Action:
+            - ssm:GetParameter
+            Resource: arn:aws:ssm:*:*:parameter/*
+          - Effect: Allow
+            Action:
+            - kms:Decrypt
+            Resource: arn:aws:kms:*:*:key/*
+        PolicyName: ScheduledJobScrapeRolePolicy
   ScheduledJobScrape:
     Type: AWS::Serverless::Function
     Properties:
       Runtime: python3.9
       Handler: app.scheduled_job_scrape
-      CodeUri: s3://semantic-job-search-bucket/794eb21a5564212e3a39fbecd1a71cf9
+      CodeUri: s3://semantic-job-search-bucket/26c8082d5fb6899549d5070157531617
       Tags:
-        aws-chalice: version=1.30.0:stage=dev:app=swifthire-cloud
+        aws-chalice: version=1.30.0:stage=dev:app=semantic-job-match
       Tracing: PassThrough
-      Timeout: 60
+      Timeout: 300
       MemorySize: 128
       Role:
         Fn::GetAtt:
-        - DefaultRole
+        - ScheduledJobScrapeRole
         - Arn
       Events:
         ScheduledJobScrapeEvent:
           Type: Schedule
           Properties:
-            Schedule: cron(0 0 ? * MON-FRI *)
+            Schedule: cron(25 3 ? * * *)
