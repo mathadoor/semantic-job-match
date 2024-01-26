@@ -194,7 +194,7 @@ def add_job(posting):
 #     return responses
 # Lambda Functions
 @app.schedule(Cron(0, 0, '?', '*', '*', '*').to_string())
-def scheduled_job_scrape():
+def scheduled_job_scrape(event, context):
     """ Function to scrape job postings and add them to the database"""
 
     # SCRAPE JOB POSTINGS

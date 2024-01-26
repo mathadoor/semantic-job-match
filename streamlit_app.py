@@ -1,5 +1,7 @@
 import re
 import streamlit as st
+import boto3
+import json
 
 # function to validate email
 
@@ -39,9 +41,24 @@ resume = st.file_uploader('Resume', type=['pdf'])
 if st.button('Submit'):
     # If any of the entries are not valid, display error message in red
     if (name == ""
-            or not validate_email(name)
+            or not validate_email(email)
             or resume is None):
         st.markdown('<p style="color: red;">Please Enter Valid Information</p>', unsafe_allow_html=True)
     else:
         st.write(f'Thank you for submitting your information. We will send you job postings '
-                 f'that match your resume on {frequency.text} basis.')
+                 f'that match your resume on {frequency} basis.')
+
+        # Load the configuration
+        with open('./aws-app/chalicelib/app_config.json', 'r') as f:
+            config = json.load(f)
+
+        # Check if the bucket exists, if not create it
+        s3_client = boto3.client('s3')
+        bucket_name = config['INFRA']['AWS']['S3']['RESUME_BUCKET']
+        if bucket_name not in [bucket['Name'] for bucket in s3_client.list_buckets()['Buckets']]:
+            s3_client.create_bucket(Bucket=bucket_name)
+
+        # Upload the resume to the bucket
+        s3_client.upload_fileobj(resume, bucket_name, f"{name}_{email}_resume.pdf")
+
+        # Upload the information to the database

@@ -31,11 +31,14 @@
   },
   "INFRA" : {
     "CHALICE" : {
-      "APP_NAME" : "swift-hire-dev"
+      "APP_NAME" : "semantic-job-match"
     },
     "AWS" : {
       "S3" : {
-        "JOBS_BUCKET" : "swifthire-media-bucket-0"
+        "RESUME_BUCKET" : "resumes-semantic-job-matcher"
+      },
+      "DynamoDB" : {
+        "CANDIDATES_TABLE" : "candidates-profile-semantic-job-matcher"
       }
     }
   }
