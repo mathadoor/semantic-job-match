@@ -34,5 +34,5 @@ ses_client = boto3.client("ses")
 response = ses_client.list_templates()
 if config["TEMPLATE_NAME"] not in [template["Name"] for template in response["TemplatesMetadata"]]:
     response = ses_client.create_template(Template=template_input)
-else: # Update the template
+else:  # Update the template
     response = ses_client.update_template(Template=template_input)
