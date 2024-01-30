@@ -193,7 +193,7 @@ def add_job(posting):
 #
 #     return responses
 # Lambda Functions
-@app.schedule(Cron(25, 3, '?', '*', '*', '*').to_string())
+# @app.schedule(Cron(25, 3, '?', '*', '*', '*').to_string())
 def scheduled_job_scrape(context):
     """ Function to scrape job postings and add them to the database"""
 
@@ -242,5 +242,5 @@ def scrape_jobs():
 #
 # See the README documentation for more examples.
 #
-# if __name__ == "__main__":
-#     scheduled_job_scrape()
+if __name__ == "__main__":
+    scheduled_job_scrape(None)
