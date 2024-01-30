@@ -39,6 +39,10 @@
       },
       "DynamoDB" : {
         "CANDIDATES_TABLE" : "candidates-profile-semantic-job-matcher"
+      },
+      "SES" : {
+        "TEMPLATE_NAME" : "job-match-email-template",
+        "SENDER_EMAIL" : "matharooh2+test@gmail.com"
       }
     }
   }

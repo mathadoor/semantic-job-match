@@ -45,8 +45,9 @@ if st.button('Submit'):
             or resume is None):
         st.markdown('<p style="color: red;">Please Enter Valid Information</p>', unsafe_allow_html=True)
     else:
-        st.write(f'Thank you for submitting your information. We will send you job postings '
-                 f'that match your resume on {frequency} basis.')
+
+        st.write(f'Thank you for submitting your information. An email has been sent to you for verification'
+                 f' Once verified, we will send you job postings that match your resume on {frequency} basis.')
 
         # Load the configuration
         with open('./aws-app/chalicelib/app_config.json', 'r') as f:
