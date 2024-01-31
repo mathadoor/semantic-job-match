@@ -7,6 +7,16 @@ import json
 import os
 
 
+def load_config():
+    """
+    Loads the configuration from the config file
+    """
+    parent_dir = os.path.dirname(os.path.dirname(__file__))
+    with open(os.path.join(parent_dir, "aws-app/chalicelib/app_config.json"), "r") as f:
+        config = json.load(f)
+    return config
+
+
 class UserProfile:
     """
     A class to confirm submission and email the user for verification
@@ -19,6 +29,8 @@ class UserProfile:
         self.job_title = job_title
         self.resume = resume
         self.ses_client = boto3.client('ses')
+        self.db_client = boto3.client('dynamodb')
+        self.config = load_config()
 
         if self.resume is not None:
             self.resume = PDFParser(self.resume).extract_text()
@@ -102,7 +114,31 @@ class UserProfile:
         """
         Uploads the profile to the AWS Database
         """
-        pass
+        if self.validate_profile() == "valid":
+            db_config = self.config["INFRA"]["AWS"]["DYNAMODB"]
+
+            # Check if the table exists, if not create it
+            if db_config["CANDIDATE_TABLE"] not in self.db_client.list_tables()["TableNames"]:
+                self.db_client.create_table(
+                    TableName=db_config["CANDIDATE_TABLE"],
+                    KeySchema=[
+                        {"AttributeName": "email", "KeyType": "HASH"}
+                    ],
+                    AttributeDefinitions=[
+                        {"AttributeName": "email", "AttributeType": "S"}
+                    ]
+                )
+                print("Table Created")
+            response = self.db_client.put_item(
+                TableName=db_config["CANDIDATE_TABLE"],
+                Item={
+                    "email": {"S": self.email},
+                    "name": {"S": self.name},
+                    "frequency": {"S": self.frequency},
+                    "job_title": {"S": self.job_title},
+                    "resume": {"S": self.resume}
+                }
+            )
 
     def send_email(self, custom=False):
         """
@@ -111,10 +147,10 @@ class UserProfile:
         # Check if the profile is valid
         if self.validate_profile() == "valid":
             # Load the configuration
-            parent_dir = os.path.dirname(os.path.dirname(__file__))
-            with open(os.path.join(parent_dir, "aws-app/chalicelib/app_config.json"), "r") as f:
-                config = json.load(f)
-            ses_config = config["INFRA"]["AWS"]["SES"]
+            ses_config = self.config["INFRA"]["AWS"]["SES"]
+
+            # Upload Profile to the Database
+            self.upload_profile()
 
             # Send the confirmation email
             # DO NOT USE CUSTOM TEMPLATES TILL PRODUCTION SES GRANTED

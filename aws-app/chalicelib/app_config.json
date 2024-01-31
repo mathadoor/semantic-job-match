@@ -37,8 +37,8 @@
       "S3" : {
         "RESUME_BUCKET" : "resumes-semantic-job-matcher"
       },
-      "DynamoDB" : {
-        "CANDIDATES_TABLE" : "candidates-profile-semantic-job-matcher"
+      "DYNAMODB" : {
+        "CANDIDATE_TABLE" : "candidates-profile-semantic-job-matcher"
       },
       "SES" : {
         "TEMPLATE_NAME" : "job-match-email-template",

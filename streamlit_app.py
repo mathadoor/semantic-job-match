@@ -50,7 +50,7 @@ if st.button('Submit'):
     if status == "valid":
         response = profile.send_email()
         if response['ResponseMetadata']['HTTPStatusCode'] == 200:
-            st.write(f'Thank you for submitting your information. An email has been sent to you for verification'
+            st.write(f'Thank you for submitting your information. An email has been sent to you for verification.'
                      f' Once verified, we will send you job postings that match your resume on {frequency} basis.')
     elif status == "existing":
         pass
